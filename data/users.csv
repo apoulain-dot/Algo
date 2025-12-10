@@ -1,0 +1,3 @@
+id,nom,email,mdp,role,created_at,nom_entreprise
+1,salut,salut@gmail.com,$2b$14$EgfN4SJWSNDvl8WES6VC4.4YhY24byI/j2iKjx7Qd9tMoVp/4Sdui,user,2025-12-10 16:31:01,salut
+2,Lakak,Lakaka@mail.com,$2b$14$saqzeP5PZc.0yVaNVp24e.X3HIRx3njjVkPh86jjFNY.TMgDn2oNu,user,2025-12-10 16:33:49,test
