@@ -1,3 +1,5 @@
 id,nom,email,mdp,role,created_at,nom_entreprise
 1,salut,salut@gmail.com,$2b$14$EgfN4SJWSNDvl8WES6VC4.4YhY24byI/j2iKjx7Qd9tMoVp/4Sdui,user,2025-12-10 16:31:01,salut
 2,Lakak,Lakaka@mail.com,$2b$14$saqzeP5PZc.0yVaNVp24e.X3HIRx3njjVkPh86jjFNY.TMgDn2oNu,user,2025-12-10 16:33:49,test
+3,admin,admin@gmail.com,$2b$14$z7TEF9Lhc6Wux0CwvDoZoelwpfKayg8iol.y4FBqg5zCS0.8318Kq,user,2025-12-10 16:47:00,admin
+4,fefe,fef@gmail.com,$2b$14$vMvsNEJj.3VPBSDkPtHmB.pov6CYfOI5FuyPhx6cM93yBi/XGNrmm,user,2025-12-10 16:49:35,tetet
