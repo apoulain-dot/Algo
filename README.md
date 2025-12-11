@@ -10,7 +10,6 @@ Une application web en Python qui permet aux entreprises de vendre leurs produit
 ### Entreprises
 
 * Inscription / connexion sécurisée
-* Vérification des mots de passe compromis (API Have I Been Pwned)
 * Gestion des produits : ajout, modification, suppression
 * Gestion du stock
 * Tableau de bord et statistiques (graphiques)
