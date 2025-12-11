@@ -1,3 +1,5 @@
 id,nom,description,prix,quantite,id_entreprise
 1,test,test,10,100,3
 2,zddzq,dzqdzq,10.00,01000,3
+3,test,test,100,10,5
+4,bateau,ca flotte,12000,1,5
