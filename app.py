@@ -1004,5 +1004,5 @@ def start_app():
 if __name__ == '__main__':
     init_csv_files()
     # pour dev : décommente pour voir sur http://127.0.0.1:5000
-    app.run(debug=True)
+    app.run(debug=False)
     start_app()
