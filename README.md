@@ -57,7 +57,8 @@ python desktop_app.py
 
 ##  Sécurité
 
-* Mots de passe hachés (Werkzeug)
+* Mots de passe hachés SHA
+* Salt 
 * Vérification de sécurité via Have I Been Pwned
 * Sessions sécurisées
 * Validation des données
