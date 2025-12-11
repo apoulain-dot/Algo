@@ -109,13 +109,5 @@ La base est créée automatiquement au premier lancement.
 2. Rechercher / filtrer
 3. Passer une commande
 
-##  Améliorations possibles
-
-* Paiement en ligne
-* Envoi d’emails
-* Upload d’images
-* Avis clients
-* Export CSV/PDF
-* API REST
 
 
