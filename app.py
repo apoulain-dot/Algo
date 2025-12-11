@@ -880,7 +880,7 @@ def dashboard():
     # Dans ton code initial, tu utilisais user['id'], ce qui peut être différent
     # si plus tard tu as une notion d’entreprise séparée. Pour l’instant,
     # on garde l’ID user comme id_entreprise.
-    products = get_products_by_entreprise(user['id'])
+    products = get_products_by_entreprise(user['nom_entreprise'])
 
     total_quantity = sum(int(p['quantite']) for p in products) if products else 0
     total_value = sum(float(p['prix']) * int(p['quantite']) for p in products) if products else 0

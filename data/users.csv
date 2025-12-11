@@ -4,3 +4,4 @@ id,nom,email,mdp,role,created_at,nom_entreprise
 3,admin,admin@gmail.com,$2b$14$z7TEF9Lhc6Wux0CwvDoZoelwpfKayg8iol.y4FBqg5zCS0.8318Kq,user,2025-12-10 16:47:00,admin
 4,fefe,fef@gmail.com,$2b$14$vMvsNEJj.3VPBSDkPtHmB.pov6CYfOI5FuyPhx6cM93yBi/XGNrmm,user,2025-12-10 16:49:35,tetet
 5,test,test@gmail.com,$2b$14$6Xbnli27XAgtDZBLW8RTnuIOcuzalWpy1M5xI6MfeiJE9lHWflvG6,user,2025-12-10 18:49:42,test
+6,test 2,test2@gmail.com,$2b$14$Y5738Lslc826xs1wRrj8BOULNU8evAXb2Ub2xxv/HLfB7StBHXOQG,user,2025-12-11 18:00:58,test
