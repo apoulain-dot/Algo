@@ -1,7 +1,7 @@
 
 ---
 
-# Marketplace – Plateforme de Vente
+# Marketplace – Plateforme de Mise en Vente pour Entreprise
 
 Une application web en Python qui permet aux entreprises de vendre leurs produits en ligne et aux clients de passer des commandes.
 
