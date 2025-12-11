@@ -31,13 +31,13 @@ jobs:
     # Étape 4: Pylint (qualité de code)
     - name: Run Pylint
       run: |
-        pylint **/*.py --exit-zero --output-format=text
+        pylint $(find . -name "*.py" | grep -v venv) --exit-zero --output-format=text
       continue-on-error: true
     
     # Étape 5: Bandit (sécurité du code)
     - name: Run Bandit Security Scan
       run: |
-        bandit -r . -f txt -o bandit-report.txt || true
+        bandit -r . -f txt -o bandit-report.txt -x ./venv,./tests || true
         cat bandit-report.txt
       continue-on-error: true
     
