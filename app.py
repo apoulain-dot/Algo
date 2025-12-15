@@ -6,7 +6,8 @@ import webview
 import bcrypt
 
 app = Flask(__name__)
-app.secret_key = 'votre_cle_secrete_a_changer'
+# Génère une clé aléatoire ou utilise une variable d'environnement
+app.secret_key = os.environ.get('SECRET_KEY') or os.urandom(24).hex()
 
 # Chemins des fichiers CSV
 USERS_FILE = './data/users.csv'
