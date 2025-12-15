@@ -1,9 +1,0 @@
-id,nom,email,mdp,role,created_at,nom_entreprise
-1,salut,salut@gmail.com,$2b$14$EgfN4SJWSNDvl8WES6VC4.4YhY24byI/j2iKjx7Qd9tMoVp/4Sdui,user,2025-12-10 16:31:01,salut
-2,Lakak,Lakaka@mail.com,$2b$14$saqzeP5PZc.0yVaNVp24e.X3HIRx3njjVkPh86jjFNY.TMgDn2oNu,user,2025-12-10 16:33:49,test
-3,admin,admin@gmail.com,$2b$14$z7TEF9Lhc6Wux0CwvDoZoelwpfKayg8iol.y4FBqg5zCS0.8318Kq,user,2025-12-10 16:47:00,admin
-4,fefe,fef@gmail.com,$2b$14$vMvsNEJj.3VPBSDkPtHmB.pov6CYfOI5FuyPhx6cM93yBi/XGNrmm,user,2025-12-10 16:49:35,tetet
-5,test,test@gmail.com,$2b$14$6Xbnli27XAgtDZBLW8RTnuIOcuzalWpy1M5xI6MfeiJE9lHWflvG6,user,2025-12-10 18:49:42,test
-6,test 2,test2@gmail.com,$2b$14$Y5738Lslc826xs1wRrj8BOULNU8evAXb2Ub2xxv/HLfB7StBHXOQG,user,2025-12-11 18:00:58,test
-7,Test lundi,testlundi@gmail.com,$2b$14$yuCDX.0qCkpDs9HIAxEPT.DavE3wZaRM8DbfaYMJPDGejiFTPczzu,user,2025-12-15 13:45:09,1
-8,test mardi,testmardi@gmail.com,$2b$14$d9EA.EAswkIFhqKf7M3gxuatCSAqLKUQhcy1/TAvm7yx9B/ZyM7tC,user,2025-12-15 13:46:19,1
