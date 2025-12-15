@@ -3,3 +3,5 @@ id,nom,description,prix,quantite,id_entreprise
 2,zddzq,dzqdzq,10.00,01000,3
 3,test,test,100,10,5
 5,Telephone,,200,10,6
+6,lundi,,15000,2,1
+7,red bull,,10,10,1

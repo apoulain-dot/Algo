@@ -11,16 +11,25 @@ app.secret_key = 'votre_cle_secrete_a_changer'
 # Chemins des fichiers CSV
 USERS_FILE = './data/users.csv'
 PRODUCTS_FILE = './data/products.csv'
+ENTREPRISES_FILE = './data/entreprises.csv'  # NOUVEAU
 
 
 # ---------- Utils CSV / Auth ----------
 
 def init_csv_files():
     os.makedirs('./data', exist_ok=True)
+    
+    # Fichier entreprises (NOUVEAU)
+    if not os.path.exists(ENTREPRISES_FILE):
+        with open(ENTREPRISES_FILE, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow(['id', 'nom', 'created_at'])
+    
+    # Fichier users (MODIFIÉ : id_entreprise au lieu de nom_entreprise)
     if not os.path.exists(USERS_FILE):
         with open(USERS_FILE, 'w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
-            writer.writerow(['id', 'nom', 'email', 'mdp', 'role', 'created_at', 'nom_entreprise'])
+            writer.writerow(['id', 'nom', 'email', 'mdp', 'role', 'created_at', 'id_entreprise'])
 
     if not os.path.exists(PRODUCTS_FILE):
         with open(PRODUCTS_FILE, 'w', newline='', encoding='utf-8') as f:
@@ -56,14 +65,67 @@ def get_user_by_email(email):
     return None
 
 
+# ---------- Fonctions Entreprises (NOUVEAU) ----------
+
+def get_entreprise_by_nom(nom):
+    """Récupère une entreprise par son nom"""
+    if not os.path.exists(ENTREPRISES_FILE):
+        return None
+    with open(ENTREPRISES_FILE, 'r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if row['nom'].lower() == nom.lower():
+                return row
+    return None
+
+
+def get_entreprise_by_id(entreprise_id):
+    """Récupère une entreprise par son ID"""
+    if not os.path.exists(ENTREPRISES_FILE):
+        return None
+    with open(ENTREPRISES_FILE, 'r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if row['id'] == str(entreprise_id):
+                return row
+    return None
+
+
+def create_entreprise(nom):
+    """Crée une nouvelle entreprise et retourne son ID"""
+    entreprise_id = get_next_id(ENTREPRISES_FILE)
+    created_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    
+    with open(ENTREPRISES_FILE, 'a', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow([entreprise_id, nom, created_at])
+    
+    return entreprise_id
+
+
+# ---------- Utilisateurs (MODIFIÉ) ----------
+
 def create_user(nom, email, password, nom_entreprise):
+    """Crée un utilisateur et l'associe à une entreprise"""
     user_id = get_next_id(USERS_FILE)
     hashed_pwd = hash_password(password)
     created_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
+    
+    # Vérifier si l'entreprise existe
+    entreprise = get_entreprise_by_nom(nom_entreprise)
+    
+    if entreprise:
+        # L'entreprise existe déjà, on récupère son ID
+        id_entreprise = entreprise['id']
+    else:
+        # L'entreprise n'existe pas, on la crée
+        id_entreprise = create_entreprise(nom_entreprise)
+    
+    # Créer l'utilisateur avec l'ID de l'entreprise
     with open(USERS_FILE, 'a', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
-        writer.writerow([user_id, nom, email, hashed_pwd, 'user', created_at, nom_entreprise])
+        writer.writerow([user_id, nom, email, hashed_pwd, 'user', created_at, id_entreprise])
+    
     return user_id
 
 
@@ -82,7 +144,7 @@ def get_products_by_entreprise(id_entreprise):
 
 
 def get_product_by_id(product_id, entreprise_id):
-    """Retourne un produit par id, en vérifiant qu’il appartient bien à l’entreprise."""
+    """Retourne un produit par id, en vérifiant qu'il appartient bien à l'entreprise."""
     if not os.path.exists(PRODUCTS_FILE):
         return None
     with open(PRODUCTS_FILE, 'r', encoding='utf-8') as f:
@@ -354,7 +416,6 @@ AUTH_TEMPLATE = '''
                 return;
             }
            
-            // Critères de force
             if (password.length >= 8) strength += 25;
             if (password.length >= 12) strength += 10;
             if (/[a-z]/.test(password)) strength += 15;
@@ -362,7 +423,6 @@ AUTH_TEMPLATE = '''
             if (/[0-9]/.test(password)) strength += 15;
             if (/[^a-zA-Z0-9]/.test(password)) strength += 20;
            
-            // Définir le texte et la couleur
             if (strength < 30) {
                 text = 'Très faible';
                 color = '#ff4444';
@@ -475,7 +535,6 @@ DASHBOARD_TEMPLATE = '''
             -webkit-text-fill-color: transparent;
         }
 
-        /* NOUVEAUX BOUTONS */
         .actions {
             margin-bottom: 25px;
             display: flex;
@@ -553,7 +612,6 @@ DASHBOARD_TEMPLATE = '''
     
     <div class="container">
 
-        <!-- NOUVEAUX BOUTONS -->
         <div class="actions">
             <a href="{{ url_for('product_add') }}" class="btn btn-primary">+ Créer un produit</a>
             <a href="{{ url_for('product_list') }}" class="btn btn-outline">Voir tous les produits</a>
@@ -782,10 +840,6 @@ PRODUCT_FORM_TEMPLATE = """
 </html>
 """
 
-# Tu peux coller ici ton AUTH_TEMPLATE et DASHBOARD_TEMPLATE d’origine
-# pour garder le même look & feel.
-# --------------------------------------------------------------
-
 
 # ---------- Routes Auth / Index ----------
 
@@ -803,9 +857,14 @@ def login():
 
     user = get_user_by_email(email)
     if user and check_password(password, user['mdp']):
+        # MODIFIÉ : Récupérer le nom de l'entreprise via l'ID
+        entreprise = get_entreprise_by_id(user['nom_entreprise'])
+        
         session['user_id'] = user['id']
         session['user_nom'] = user['nom']
-        session['nom_entreprise'] = user['nom_entreprise']
+        session['id_entreprise'] = user['nom_entreprise']  # IMPORTANT
+        session['nom_entreprise'] = entreprise['nom'] if entreprise else 'Entreprise inconnue'
+        
         return redirect(url_for('dashboard'))
     else:
         return render_template_string(
@@ -873,14 +932,12 @@ def dashboard():
     user = {
         'id': session['user_id'],
         'nom': session['user_nom'],
-        'nom_entreprise': session['nom_entreprise']
+        'nom_entreprise': session['nom_entreprise'],
+        'id_entreprise': session['id_entreprise']  # AJOUTÉ
     }
 
-    # Important : ici, on veut lier les produits à l’entreprise (id_entreprise)
-    # Dans ton code initial, tu utilisais user['id'], ce qui peut être différent
-    # si plus tard tu as une notion d’entreprise séparée. Pour l’instant,
-    # on garde l’ID user comme id_entreprise.
-    products = get_products_by_entreprise(user['nom_entreprise'])
+    # MODIFIÉ : utiliser id_entreprise au lieu de nom_entreprise
+    products = get_products_by_entreprise(user['id_entreprise'])
 
     total_quantity = sum(int(p['quantite']) for p in products) if products else 0
     total_value = sum(float(p['prix']) * int(p['quantite']) for p in products) if products else 0
@@ -904,10 +961,12 @@ def product_list():
     user = {
         'id': session['user_id'],
         'nom': session['user_nom'],
-        'nom_entreprise': session['nom_entreprise']
+        'nom_entreprise': session['nom_entreprise'],
+        'id_entreprise': session['id_entreprise']  # AJOUTÉ
     }
 
-    all_products = get_products_by_entreprise(user['id'])
+    # MODIFIÉ : utiliser id_entreprise
+    all_products = get_products_by_entreprise(user['id_entreprise'])
 
     # Recherche simple par nom
     q = request.args.get('q', '').strip()
@@ -941,7 +1000,8 @@ def product_add():
     user = {
         'id': session['user_id'],
         'nom': session['user_nom'],
-        'nom_entreprise': session['nom_entreprise']
+        'nom_entreprise': session['nom_entreprise'],
+        'id_entreprise': session['id_entreprise']  # AJOUTÉ
     }
 
     if request.method == 'POST':
@@ -950,7 +1010,8 @@ def product_add():
         prix = request.form['prix']
         quantite = request.form['quantite']
 
-        add_product(nom, description, prix, quantite, user['id'])
+        # MODIFIÉ : utiliser id_entreprise
+        add_product(nom, description, prix, quantite, user['id_entreprise'])
         return redirect(url_for('product_list'))
 
     return render_template_string(PRODUCT_FORM_TEMPLATE, user=user, product=None)
@@ -964,10 +1025,12 @@ def product_edit(product_id):
     user = {
         'id': session['user_id'],
         'nom': session['user_nom'],
-        'nom_entreprise': session['nom_entreprise']
+        'nom_entreprise': session['nom_entreprise'],
+        'id_entreprise': session['id_entreprise']  # AJOUTÉ
     }
 
-    product = get_product_by_id(product_id, user['id'])
+    # MODIFIÉ : utiliser id_entreprise
+    product = get_product_by_id(product_id, user['id_entreprise'])
     if not product:
         return "Produit introuvable ou non autorisé", 404
 
@@ -977,7 +1040,7 @@ def product_edit(product_id):
         prix = request.form['prix']
         quantite = request.form['quantite']
 
-        update_product(product_id, user['id'], nom, description, prix, quantite)
+        update_product(product_id, user['id_entreprise'], nom, description, prix, quantite)
         return redirect(url_for('product_list'))
 
     return render_template_string(PRODUCT_FORM_TEMPLATE, user=user, product=product)
@@ -988,7 +1051,8 @@ def product_delete(product_id):
     if 'user_id' not in session:
         return redirect(url_for('index'))
 
-    entreprise_id = session['user_id']
+    # MODIFIÉ : utiliser id_entreprise
+    entreprise_id = session['id_entreprise']
     delete_product(product_id, entreprise_id)
     return redirect(url_for('product_list'))
 
