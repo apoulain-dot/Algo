@@ -107,7 +107,7 @@ La base est créée automatiquement au premier lancement.
 
 1. Parcourir les produits
 2. Rechercher / filtrer
-3. Passer une commande
+3. Passer une commande 
 
 
 

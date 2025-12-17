@@ -6,26 +6,37 @@ import webview
 import bcrypt
 
 app = Flask(__name__)
-app.secret_key = 'votre_cle_secrete_a_changer'
+# Génère une clé aléatoire ou utilise une variable d'environnement
+app.secret_key = os.environ.get('SECRET_KEY') or os.urandom(24).hex()
 
 # Chemins des fichiers CSV
 USERS_FILE = './data/users.csv'
 PRODUCTS_FILE = './data/products.csv'
+ENTREPRISES_FILE = './data/entreprises.csv'
 
 
 # ---------- Utils CSV / Auth ----------
 
 def init_csv_files():
     os.makedirs('./data', exist_ok=True)
+    
+    # Fichier entreprises
+    if not os.path.exists(ENTREPRISES_FILE):
+        with open(ENTREPRISES_FILE, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow(['id', 'nom', 'created_at'])
+    
+    # Fichier users
     if not os.path.exists(USERS_FILE):
         with open(USERS_FILE, 'w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
-            writer.writerow(['id', 'nom', 'email', 'mdp', 'role', 'created_at', 'nom_entreprise'])
+            writer.writerow(['id', 'nom', 'email', 'mdp', 'role', 'created_at', 'id_entreprise'])
 
+    # Fichier products avec image_url
     if not os.path.exists(PRODUCTS_FILE):
         with open(PRODUCTS_FILE, 'w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
-            writer.writerow(['id', 'nom', 'description', 'prix', 'quantite', 'id_entreprise'])
+            writer.writerow(['id', 'nom', 'description', 'prix', 'quantite', 'id_entreprise', 'image_url'])
 
 
 def hash_password(password: str) -> str:
@@ -56,14 +67,64 @@ def get_user_by_email(email):
     return None
 
 
+# ---------- Fonctions Entreprises ----------
+
+def get_entreprise_by_nom(nom):
+    """Récupère une entreprise par son nom"""
+    if not os.path.exists(ENTREPRISES_FILE):
+        return None
+    with open(ENTREPRISES_FILE, 'r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if row['nom'].lower() == nom.lower():
+                return row
+    return None
+
+
+def get_entreprise_by_id(entreprise_id):
+    """Récupère une entreprise par son ID"""
+    if not os.path.exists(ENTREPRISES_FILE):
+        return None
+    with open(ENTREPRISES_FILE, 'r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if row['id'] == str(entreprise_id):
+                return row
+    return None
+
+
+def create_entreprise(nom):
+    """Crée une nouvelle entreprise et retourne son ID"""
+    entreprise_id = get_next_id(ENTREPRISES_FILE)
+    created_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    
+    with open(ENTREPRISES_FILE, 'a', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow([entreprise_id, nom, created_at])
+    
+    return entreprise_id
+
+
+# ---------- Utilisateurs ----------
+
 def create_user(nom, email, password, nom_entreprise):
+    """Crée un utilisateur et l'associe à une entreprise"""
     user_id = get_next_id(USERS_FILE)
     hashed_pwd = hash_password(password)
     created_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
+    
+    # Vérifier si l'entreprise existe
+    entreprise = get_entreprise_by_nom(nom_entreprise)
+    
+    if entreprise:
+        id_entreprise = entreprise['id']
+    else:
+        id_entreprise = create_entreprise(nom_entreprise)
+    
     with open(USERS_FILE, 'a', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
-        writer.writerow([user_id, nom, email, hashed_pwd, 'user', created_at, nom_entreprise])
+        writer.writerow([user_id, nom, email, hashed_pwd, 'user', created_at, id_entreprise])
+    
     return user_id
 
 
@@ -82,7 +143,7 @@ def get_products_by_entreprise(id_entreprise):
 
 
 def get_product_by_id(product_id, entreprise_id):
-    """Retourne un produit par id, en vérifiant qu’il appartient bien à l’entreprise."""
+    """Retourne un produit par id, en vérifiant qu'il appartient bien à l'entreprise."""
     if not os.path.exists(PRODUCTS_FILE):
         return None
     with open(PRODUCTS_FILE, 'r', encoding='utf-8') as f:
@@ -96,22 +157,22 @@ def get_product_by_id(product_id, entreprise_id):
 def write_all_products(products):
     """Réécrit tout le fichier produits (pour update/delete)."""
     with open(PRODUCTS_FILE, 'w', newline='', encoding='utf-8') as f:
-        fieldnames = ['id', 'nom', 'description', 'prix', 'quantite', 'id_entreprise']
+        fieldnames = ['id', 'nom', 'description', 'prix', 'quantite', 'id_entreprise', 'image_url']
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         for p in products:
             writer.writerow(p)
 
 
-def add_product(nom, description, prix, quantite, id_entreprise):
+def add_product(nom, description, prix, quantite, id_entreprise, image_url=''):
     product_id = get_next_id(PRODUCTS_FILE)
     with open(PRODUCTS_FILE, 'a', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
-        writer.writerow([product_id, nom, description, prix, quantite, id_entreprise])
+        writer.writerow([product_id, nom, description, prix, quantite, id_entreprise, image_url])
     return product_id
 
 
-def update_product(product_id, entreprise_id, nom, description, prix, quantite):
+def update_product(product_id, entreprise_id, nom, description, prix, quantite, image_url=''):
     products = []
     if not os.path.exists(PRODUCTS_FILE):
         return False
@@ -125,6 +186,7 @@ def update_product(product_id, entreprise_id, nom, description, prix, quantite):
                 row['description'] = description
                 row['prix'] = prix
                 row['quantite'] = quantite
+                row['image_url'] = image_url
                 updated = True
             products.append(row)
 
@@ -354,7 +416,6 @@ AUTH_TEMPLATE = '''
                 return;
             }
            
-            // Critères de force
             if (password.length >= 8) strength += 25;
             if (password.length >= 12) strength += 10;
             if (/[a-z]/.test(password)) strength += 15;
@@ -362,7 +423,6 @@ AUTH_TEMPLATE = '''
             if (/[0-9]/.test(password)) strength += 15;
             if (/[^a-zA-Z0-9]/.test(password)) strength += 20;
            
-            // Définir le texte et la couleur
             if (strength < 30) {
                 text = 'Très faible';
                 color = '#ff4444';
@@ -475,7 +535,6 @@ DASHBOARD_TEMPLATE = '''
             -webkit-text-fill-color: transparent;
         }
 
-        /* NOUVEAUX BOUTONS */
         .actions {
             margin-bottom: 25px;
             display: flex;
@@ -532,6 +591,25 @@ DASHBOARD_TEMPLATE = '''
             font-weight: 600;
             color: #666;
         }
+        .product-image {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #eee;
+        }
+        .product-image-placeholder {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 24px;
+        }
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -553,7 +631,6 @@ DASHBOARD_TEMPLATE = '''
     
     <div class="container">
 
-        <!-- NOUVEAUX BOUTONS -->
         <div class="actions">
             <a href="{{ url_for('product_add') }}" class="btn btn-primary">+ Créer un produit</a>
             <a href="{{ url_for('product_list') }}" class="btn btn-outline">Voir tous les produits</a>
@@ -580,7 +657,7 @@ DASHBOARD_TEMPLATE = '''
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        <th>Image</th>
                         <th>Nom</th>
                         <th>Description</th>
                         <th>Prix</th>
@@ -590,7 +667,18 @@ DASHBOARD_TEMPLATE = '''
                 <tbody>
                     {% for product in products[:5] %}
                     <tr>
-                        <td>{{ product.id }}</td>
+                        <td>
+                            {% if product.image_url %}
+                                <img src="{{ product.image_url }}" alt="{{ product.nom }}" class="product-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="product-image-placeholder" style="display:none;">
+                                    {{ product.nom[0]|upper }}
+                                </div>
+                            {% else %}
+                                <div class="product-image-placeholder">
+                                    {{ product.nom[0]|upper }}
+                                </div>
+                            {% endif %}
+                        </td>
                         <td>{{ product.nom }}</td>
                         <td>{{ product.description }}</td>
                         <td>{{ product.prix }} €</td>
@@ -653,6 +741,25 @@ PRODUCT_LIST_TEMPLATE = """
             background:#302b63; color:#fff; text-decoration:none;
             padding:6px 12px; border-radius:4px;
         }
+        .product-image {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 2px solid #eee;
+        }
+        .product-image-placeholder {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+        }
     </style>
 </head>
 <body>
@@ -680,7 +787,7 @@ PRODUCT_LIST_TEMPLATE = """
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
+                    <th>Image</th>
                     <th>Nom</th>
                     <th>Description</th>
                     <th>Prix</th>
@@ -691,7 +798,18 @@ PRODUCT_LIST_TEMPLATE = """
             <tbody>
                 {% for p in products %}
                 <tr>
-                    <td>{{ p.id }}</td>
+                    <td>
+                        {% if p.image_url %}
+                            <img src="{{ p.image_url }}" alt="{{ p.nom }}" class="product-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="product-image-placeholder" style="display:none;">
+                                {{ p.nom[0]|upper }}
+                            </div>
+                        {% else %}
+                            <div class="product-image-placeholder">
+                                {{ p.nom[0]|upper }}
+                            </div>
+                        {% endif %}
+                    </td>
                     <td>{{ p.nom }}</td>
                     <td>{{ p.description }}</td>
                     <td>{{ p.prix }} €</td>
@@ -699,7 +817,7 @@ PRODUCT_LIST_TEMPLATE = """
                     <td class="actions">
                         <a href="{{ url_for('product_edit', product_id=p.id) }}">Modifier</a>
                         <form method="post" action="{{ url_for('product_delete', product_id=p.id) }}" onsubmit="return confirm('Supprimer ce produit ?');">
-                            <button type="submit" style="background:#c0392b;color:#fff;border:none;border-radius:3px;">Supprimer</button>
+                            <button type="submit" style="background:#c0392b;color:#fff;border:none;border-radius:3px;padding:4px 8px;">Supprimer</button>
                         </form>
                     </td>
                 </tr>
@@ -746,12 +864,28 @@ PRODUCT_FORM_TEMPLATE = """
         .container { max-width:600px; margin:20px auto; background:#fff;
                      padding:20px; border-radius:8px;
                      box-shadow:0 2px 5px rgba(0,0,0,0.1); }
-        label { display:block; margin-top:10px; }
-        input[type="text"], input[type="number"] {
+        label { display:block; margin-top:10px; font-weight:500; }
+        input[type="text"], input[type="number"], input[type="url"] {
             width:100%; padding:8px; margin-top:4px;
+            border: 1px solid #ddd; border-radius:4px;
         }
-        button { margin-top:15px; padding:8px 14px; cursor:pointer; }
-        a.link { display:inline-block; margin-top:15px; }
+        button { margin-top:15px; padding:8px 14px; cursor:pointer; 
+                 background:#302b63; color:#fff; border:none; border-radius:4px; }
+        button:hover { background:#413d80; }
+        a.link { display:inline-block; margin-top:15px; color:#302b63; text-decoration:none; }
+        .image-preview {
+            margin-top: 10px;
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 8px;
+            border: 2px solid #eee;
+            display: none;
+        }
+        .help-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
     </style>
 </head>
 <body>
@@ -766,25 +900,52 @@ PRODUCT_FORM_TEMPLATE = """
     <div class="container">
         <h2>{% if product %}Modifier{% else %}Ajouter{% endif %} un produit</h2>
         <form method="post">
-            <label>Nom</label>
+            <label>Nom *</label>
             <input type="text" name="nom" value="{{ product.nom if product else '' }}" required>
+            
             <label>Description</label>
             <input type="text" name="description" value="{{ product.description if product else '' }}">
-            <label>Prix (€)</label>
+            
+            <label>URL de l'image</label>
+            <input type="url" name="image_url" id="image_url" value="{{ product.image_url if product else '' }}" 
+                   placeholder="https://exemple.com/image.jpg" oninput="previewImage()">
+            <div class="help-text">Collez l'URL d'une image (Unsplash, Imgur, etc.)</div>
+            <img id="preview" class="image-preview" alt="Aperçu">
+            
+            <label>Prix (€) *</label>
             <input type="number" step="0.01" name="prix" value="{{ product.prix if product else '0.00' }}" required>
-            <label>Quantité</label>
+            
+            <label>Quantité *</label>
             <input type="number" name="quantite" value="{{ product.quantite if product else '0' }}" required>
+            
             <button type="submit">{% if product %}Enregistrer{% else %}Ajouter{% endif %}</button>
         </form>
-        <a href="{{ url_for('product_list') }}" class="link">Retour à la liste</a>
+        <a href="{{ url_for('product_list') }}" class="link">← Retour à la liste</a>
     </div>
+    
+    <script>
+        function previewImage() {
+            const url = document.getElementById('image_url').value;
+            const preview = document.getElementById('preview');
+            
+            if (url) {
+                preview.src = url;
+                preview.style.display = 'block';
+                preview.onerror = function() {
+                    preview.style.display = 'none';
+                };
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+        
+        window.onload = function() {
+            previewImage();
+        };
+    </script>
 </body>
 </html>
 """
-
-# Tu peux coller ici ton AUTH_TEMPLATE et DASHBOARD_TEMPLATE d’origine
-# pour garder le même look & feel.
-# --------------------------------------------------------------
 
 
 # ---------- Routes Auth / Index ----------
@@ -803,9 +964,28 @@ def login():
 
     user = get_user_by_email(email)
     if user and check_password(password, user['mdp']):
+        # Vérifier si c'est un nouvel utilisateur ou ancien
+        if 'id_entreprise' in user and user['id_entreprise']:
+            # Nouveau format avec id_entreprise
+            entreprise = get_entreprise_by_id(user['id_entreprise'])
+            session['id_entreprise'] = user['id_entreprise']
+            session['nom_entreprise'] = entreprise['nom'] if entreprise else 'Entreprise inconnue'
+        else:
+            # Ancien format - créer l'entreprise
+            nom_entreprise = user.get('nom_entreprise', 'Mon Entreprise')
+            entreprise = get_entreprise_by_nom(nom_entreprise)
+            
+            if entreprise:
+                id_entreprise = entreprise['id']
+            else:
+                id_entreprise = create_entreprise(nom_entreprise)
+            
+            session['id_entreprise'] = id_entreprise
+            session['nom_entreprise'] = nom_entreprise
+        
         session['user_id'] = user['id']
         session['user_nom'] = user['nom']
-        session['nom_entreprise'] = user['nom_entreprise']
+        
         return redirect(url_for('dashboard'))
     else:
         return render_template_string(
@@ -873,14 +1053,11 @@ def dashboard():
     user = {
         'id': session['user_id'],
         'nom': session['user_nom'],
-        'nom_entreprise': session['nom_entreprise']
+        'nom_entreprise': session['nom_entreprise'],
+        'id_entreprise': session['id_entreprise']
     }
 
-    # Important : ici, on veut lier les produits à l’entreprise (id_entreprise)
-    # Dans ton code initial, tu utilisais user['id'], ce qui peut être différent
-    # si plus tard tu as une notion d’entreprise séparée. Pour l’instant,
-    # on garde l’ID user comme id_entreprise.
-    products = get_products_by_entreprise(user['id'])
+    products = get_products_by_entreprise(user['id_entreprise'])
 
     total_quantity = sum(int(p['quantite']) for p in products) if products else 0
     total_value = sum(float(p['prix']) * int(p['quantite']) for p in products) if products else 0
@@ -904,17 +1081,16 @@ def product_list():
     user = {
         'id': session['user_id'],
         'nom': session['user_nom'],
-        'nom_entreprise': session['nom_entreprise']
+        'nom_entreprise': session['nom_entreprise'],
+        'id_entreprise': session['id_entreprise']
     }
 
-    all_products = get_products_by_entreprise(user['id'])
+    all_products = get_products_by_entreprise(user['id_entreprise'])
 
-    # Recherche simple par nom
     q = request.args.get('q', '').strip()
     if q:
         all_products = [p for p in all_products if q.lower() in p['nom'].lower()]
 
-    # Pagination simple
     page = request.args.get('page', 1, type=int)
     per_page = 10
     total = len(all_products)
@@ -941,7 +1117,8 @@ def product_add():
     user = {
         'id': session['user_id'],
         'nom': session['user_nom'],
-        'nom_entreprise': session['nom_entreprise']
+        'nom_entreprise': session['nom_entreprise'],
+        'id_entreprise': session['id_entreprise']
     }
 
     if request.method == 'POST':
@@ -949,8 +1126,9 @@ def product_add():
         description = request.form.get('description', '')
         prix = request.form['prix']
         quantite = request.form['quantite']
+        image_url = request.form.get('image_url', '')
 
-        add_product(nom, description, prix, quantite, user['id'])
+        add_product(nom, description, prix, quantite, user['id_entreprise'], image_url)
         return redirect(url_for('product_list'))
 
     return render_template_string(PRODUCT_FORM_TEMPLATE, user=user, product=None)
@@ -964,10 +1142,11 @@ def product_edit(product_id):
     user = {
         'id': session['user_id'],
         'nom': session['user_nom'],
-        'nom_entreprise': session['nom_entreprise']
+        'nom_entreprise': session['nom_entreprise'],
+        'id_entreprise': session['id_entreprise']
     }
 
-    product = get_product_by_id(product_id, user['id'])
+    product = get_product_by_id(product_id, user['id_entreprise'])
     if not product:
         return "Produit introuvable ou non autorisé", 404
 
@@ -976,8 +1155,9 @@ def product_edit(product_id):
         description = request.form.get('description', '')
         prix = request.form['prix']
         quantite = request.form['quantite']
+        image_url = request.form.get('image_url', '')
 
-        update_product(product_id, user['id'], nom, description, prix, quantite)
+        update_product(product_id, user['id_entreprise'], nom, description, prix, quantite, image_url)
         return redirect(url_for('product_list'))
 
     return render_template_string(PRODUCT_FORM_TEMPLATE, user=user, product=product)
@@ -988,7 +1168,7 @@ def product_delete(product_id):
     if 'user_id' not in session:
         return redirect(url_for('index'))
 
-    entreprise_id = session['user_id']
+    entreprise_id = session['id_entreprise']
     delete_product(product_id, entreprise_id)
     return redirect(url_for('product_list'))
 
@@ -1003,6 +1183,5 @@ def start_app():
 
 if __name__ == '__main__':
     init_csv_files()
-    # pour dev : décommente pour voir sur http://127.0.0.1:5000
-    app.run(debug=True)
+    app.run(debug=False)
     start_app()
