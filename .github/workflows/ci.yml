@@ -14,6 +14,8 @@ jobs:
     # Étape 1: Récupérer le code
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Important pour Gitleaks (analyse historique Git)
     
     # Étape 2: Configuration Python
     - name: Set up Python
@@ -31,7 +33,7 @@ jobs:
     # Étape 4: Pylint (qualité de code)
     - name: Run Pylint
       run: |
-        pylint $(find . -name "*.py" | grep -v venv) --exit-zero --output-format=text
+        pylint $(find . -name "*.py" | grep -v venv) --exit-zero --output-format=text | tee pylint-report.txt
       continue-on-error: true
     
     # Étape 5: Bandit (sécurité du code)
@@ -44,10 +46,36 @@ jobs:
     # Étape 6: Safety (vulnérabilités des dépendances)
     - name: Run Safety Check
       run: |
-        safety check --output text || true
+        safety check --output text | tee safety-report.txt || true
       continue-on-error: true
     
-    # Étape 7: Upload des rapports
+    # 🆕 Étape 7: Gitleaks (détection de secrets dans l'historique Git)
+    - name: Run Gitleaks Secret Scan
+      uses: gitleaks/gitleaks-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      continue-on-error: true
+    
+    # 🆕 Étape 8: Trivy (scan vulnérabilités filesystem + dépendances)
+    - name: Run Trivy Vulnerability Scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'table'
+        output: 'trivy-report.txt'
+      continue-on-error: true
+    
+    # 🆕 Étape 9: Semgrep (SAST avancé)
+    - name: Run Semgrep Static Analysis
+      uses: returntocorp/semgrep-action@v1
+      with:
+        config: >-
+          p/security-audit
+          p/python
+      continue-on-error: true
+    
+    # Étape 10: Upload des rapports
     - name: Upload Security Reports
       uses: actions/upload-artifact@v4
       if: always()
@@ -55,3 +83,6 @@ jobs:
         name: security-reports
         path: |
           bandit-report.txt
+          pylint-report.txt
+          safety-report.txt
+          trivy-report.txt
