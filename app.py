@@ -105,6 +105,18 @@ def create_entreprise(nom):
     return entreprise_id
 
 
+def get_all_entreprises():
+    """Récupère toutes les entreprises"""
+    entreprises = []
+    if not os.path.exists(ENTREPRISES_FILE):
+        return entreprises
+    with open(ENTREPRISES_FILE, 'r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            entreprises.append(row)
+    return entreprises
+
+
 # ---------- Utilisateurs ----------
 
 def create_user(nom, email, password, nom_entreprise):
@@ -215,6 +227,8 @@ def delete_product(product_id, entreprise_id):
 
     return deleted
 
+
+# ---------- Templates ----------
 
 # ---------- Templates ----------
 
@@ -953,10 +967,32 @@ DASHBOARD_TEMPLATE = '''
                 grid-template-columns: 1fr;
             }
         }
+
+        .nav-link {
+    padding: 8px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
     </style>
 </head>
 <body>
     <nav class="navbar">
+<<<<<<< HEAD
+    <div class="navbar-brand">
+        <div class="navbar-logo">
+            <svg viewBox="0 0 24 24">
+                <path d="M20 7h-4V4c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v3H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zM10 4h4v3h-4V4zm10 16H4V9h16v11z"/>
+            </svg>
+=======
         <div class="navbar-brand">
             <div class="navbar-logo">
                 <svg viewBox="0 0 24 24">
@@ -975,8 +1011,27 @@ DASHBOARD_TEMPLATE = '''
                 <div class="navbar-avatar">{{ user.nom[0]|upper }}</div>
             </div>
             <a href="/logout" class="logout-btn">Déconnexion</a>
+>>>>>>> da3806ed3828d8d4c6f0b418f4a9914e8f3e1efd
         </div>
-    </nav>
+        <span class="navbar-title">Gestion de Stock</span>
+    </div>
+    
+    <div class="navbar-right">
+        {% if user.role == 'admin' %}
+        <a href="/admin/entreprises" class="nav-link" style="background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%); color: white; border: none;">
+            ← Retour aux entreprises
+        </a>
+        {% endif %}
+        <div class="navbar-user">
+            <div class="navbar-user-info">
+                <div class="navbar-user-name">{{ user.nom }}</div>
+                <div class="navbar-user-company">{{ user.nom_entreprise }}</div>
+            </div>
+            <div class="navbar-avatar">{{ user.nom[0]|upper }}</div>
+        </div>
+        <a href="/logout" class="logout-btn">Déconnexion</a>
+    </div>
+</nav>
     
     <div class="container">
         <div class="page-header">
@@ -1988,7 +2043,391 @@ PRODUCT_FORM_TEMPLATE = """
 </body>
 </html>
 """
-
+ADMIN_ENTREPRISES_TEMPLATE = '''
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administration - Entreprises</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-dark: #1e40af;
+            --primary-light: #3b82f6;
+            --accent: #06b6d4;
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --admin-badge: #8b5cf6;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Manrope', sans-serif;
+            background: var(--bg-main);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .navbar-logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--admin-badge) 0%, #a78bfa 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .navbar-logo svg {
+            width: 20px;
+            height: 20px;
+            stroke: white;
+            stroke-width: 2.5;
+            fill: none;
+        }
+        
+        .navbar-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .admin-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: linear-gradient(135deg, var(--admin-badge) 0%, #a78bfa 100%);
+            border-radius: 20px;
+            font-size: 12px;
+            margin-left: 8px;
+            font-weight: 600;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .navbar-user-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .logout-btn {
+            padding: 8px 16px;
+            background: var(--bg-main);
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .logout-btn:hover {
+            background: white;
+            color: var(--text-primary);
+            border-color: var(--text-secondary);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px;
+        }
+        
+        .page-header {
+            margin-bottom: 32px;
+        }
+        
+        .page-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        
+        .page-subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+        }
+        
+        .entreprises-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 24px;
+        }
+        
+        .entreprise-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 28px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s ease;
+        }
+        
+        .entreprise-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-light);
+        }
+        
+        .entreprise-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .entreprise-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+            flex-shrink: 0;
+        }
+        
+        .entreprise-info {
+            flex: 1;
+        }
+        
+        .entreprise-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        
+        .entreprise-id {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .entreprise-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-item {
+            padding: 12px;
+            background: var(--bg-main);
+            border-radius: 10px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .btn-access {
+            width: 100%;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .btn-access:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .empty-state {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 64px 32px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+        
+        .empty-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--bg-main);
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+        
+        .empty-icon svg {
+            width: 40px;
+            height: 40px;
+            stroke: var(--text-secondary);
+            stroke-width: 2;
+            fill: none;
+        }
+        
+        .empty-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+        
+        .empty-text {
+            font-size: 16px;
+            color: var(--text-secondary);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .navbar {
+                padding: 12px 20px;
+            }
+            
+            .entreprises-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <div class="navbar-logo">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
+                </svg>
+            </div>
+            <span class="navbar-title">Admin Panel<span class="admin-badge">Administrateur</span></span>
+        </div>
+        
+        <div class="navbar-right">
+            <div class="navbar-user">
+                <span class="navbar-user-name">{{ user.nom }}</span>
+            </div>
+            <a href="/logout" class="logout-btn">Déconnexion</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">Gestion des Entreprises</h1>
+            <p class="page-subtitle">Accédez aux tableaux de bord des entreprises</p>
+        </div>
+        
+        {% if entreprises %}
+        <div class="entreprises-grid">
+            {% for entreprise in entreprises %}
+            <div class="entreprise-card">
+                <div class="entreprise-header">
+                    <div class="entreprise-icon">{{ entreprise.nom[0]|upper }}</div>
+                    <div class="entreprise-info">
+                        <div class="entreprise-name">{{ entreprise.nom }}</div>
+                        <div class="entreprise-id">ID: {{ entreprise.id }}</div>
+                    </div>
+                </div>
+                
+                <div class="entreprise-stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Produits</div>
+                        <div class="stat-value">{{ entreprise.nb_products }}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Créée le</div>
+                        <div class="stat-value">{{ entreprise.created_at[:10] }}</div>
+                    </div>
+                </div>
+                
+                <a href="/admin/entreprise/{{ entreprise.id }}" class="btn-access">
+                    Accéder au dashboard
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M20 7h-4V4c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v3H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2z"/>
+                </svg>
+            </div>
+            <h2 class="empty-title">Aucune entreprise</h2>
+            <p class="empty-text">Il n'y a pas encore d'entreprise enregistrée</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
+'''
 
 # ---------- Routes Auth / Index ----------
 
@@ -2006,14 +2445,11 @@ def login():
 
     user = get_user_by_email(email)
     if user and check_password(password, user['mdp']):
-        # Vérifier si c'est un nouvel utilisateur ou ancien
         if 'id_entreprise' in user and user['id_entreprise']:
-            # Nouveau format avec id_entreprise
             entreprise = get_entreprise_by_id(user['id_entreprise'])
             session['id_entreprise'] = user['id_entreprise']
             session['nom_entreprise'] = entreprise['nom'] if entreprise else 'Entreprise inconnue'
         else:
-            # Ancien format - créer l'entreprise
             nom_entreprise = user.get('nom_entreprise', 'Mon Entreprise')
             entreprise = get_entreprise_by_nom(nom_entreprise)
             
@@ -2027,8 +2463,13 @@ def login():
         
         session['user_id'] = user['id']
         session['user_nom'] = user['nom']
+        session['user_role'] = user.get('role', 'user')  
         
-        return redirect(url_for('dashboard'))
+        # Rediriger vers admin ou dashboard selon le rôle
+        if session['user_role'] == 'admin':
+            return redirect(url_for('admin_entreprises'))
+        else:
+            return redirect(url_for('dashboard'))
     else:
         return render_template_string(
             AUTH_TEMPLATE,
@@ -2091,6 +2532,10 @@ def logout():
 def dashboard():
     if 'user_id' not in session:
         return redirect(url_for('index'))
+    
+    # Si admin, rediriger vers la liste des entreprises
+    if session.get('user_role') == 'admin':
+        return redirect(url_for('admin_entreprises'))
 
     user = {
         'id': session['user_id'],
@@ -2120,14 +2565,21 @@ def product_list():
     if 'user_id' not in session:
         return redirect(url_for('index'))
 
+    if session.get('user_role') == 'admin' and 'admin_viewing_entreprise' in session:
+        entreprise_id = session['admin_viewing_entreprise']
+        nom_entreprise = session['admin_viewing_entreprise_nom']
+    else:
+        entreprise_id = session['id_entreprise']
+        nom_entreprise = session['nom_entreprise']
+
     user = {
         'id': session['user_id'],
         'nom': session['user_nom'],
-        'nom_entreprise': session['nom_entreprise'],
-        'id_entreprise': session['id_entreprise']
+        'nom_entreprise': nom_entreprise,
+        'id_entreprise': entreprise_id
     }
 
-    all_products = get_products_by_entreprise(user['id_entreprise'])
+    all_products = get_products_by_entreprise(entreprise_id)
 
     q = request.args.get('q', '').strip()
     if q:
@@ -2156,11 +2608,18 @@ def product_add():
     if 'user_id' not in session:
         return redirect(url_for('index'))
 
+    if session.get('user_role') == 'admin' and 'admin_viewing_entreprise' in session:
+        entreprise_id = session['admin_viewing_entreprise']
+        nom_entreprise = session['admin_viewing_entreprise_nom']
+    else:
+        entreprise_id = session['id_entreprise']
+        nom_entreprise = session['nom_entreprise']
+
     user = {
         'id': session['user_id'],
         'nom': session['user_nom'],
-        'nom_entreprise': session['nom_entreprise'],
-        'id_entreprise': session['id_entreprise']
+        'nom_entreprise': nom_entreprise,
+        'id_entreprise': entreprise_id
     }
 
     if request.method == 'POST':
@@ -2170,7 +2629,7 @@ def product_add():
         quantite = request.form['quantite']
         image_url = request.form.get('image_url', '')
 
-        add_product(nom, description, prix, quantite, user['id_entreprise'], image_url)
+        add_product(nom, description, prix, quantite, entreprise_id, image_url)
         return redirect(url_for('product_list'))
 
     return render_template_string(PRODUCT_FORM_TEMPLATE, user=user, product=None)
@@ -2181,14 +2640,22 @@ def product_edit(product_id):
     if 'user_id' not in session:
         return redirect(url_for('index'))
 
+    # Déterminer quelle entreprise utiliser
+    if session.get('user_role') == 'admin' and 'admin_viewing_entreprise' in session:
+        entreprise_id = session['admin_viewing_entreprise']
+        nom_entreprise = session['admin_viewing_entreprise_nom']
+    else:
+        entreprise_id = session['id_entreprise']
+        nom_entreprise = session['nom_entreprise']
+
     user = {
         'id': session['user_id'],
         'nom': session['user_nom'],
-        'nom_entreprise': session['nom_entreprise'],
-        'id_entreprise': session['id_entreprise']
+        'nom_entreprise': nom_entreprise,
+        'id_entreprise': entreprise_id
     }
 
-    product = get_product_by_id(product_id, user['id_entreprise'])
+    product = get_product_by_id(product_id, entreprise_id)
     if not product:
         return "Produit introuvable ou non autorisé", 404
 
@@ -2199,7 +2666,7 @@ def product_edit(product_id):
         quantite = request.form['quantite']
         image_url = request.form.get('image_url', '')
 
-        update_product(product_id, user['id_entreprise'], nom, description, prix, quantite, image_url)
+        update_product(product_id, entreprise_id, nom, description, prix, quantite, image_url)
         return redirect(url_for('product_list'))
 
     return render_template_string(PRODUCT_FORM_TEMPLATE, user=user, product=product)
@@ -2210,10 +2677,74 @@ def product_delete(product_id):
     if 'user_id' not in session:
         return redirect(url_for('index'))
 
-    entreprise_id = session['id_entreprise']
+    # Déterminer quelle entreprise utiliser
+    if session.get('user_role') == 'admin' and 'admin_viewing_entreprise' in session:
+        entreprise_id = session['admin_viewing_entreprise']
+    else:
+        entreprise_id = session['id_entreprise']
+
     delete_product(product_id, entreprise_id)
     return redirect(url_for('product_list'))
 
+# ---------- Routes Admin ----------
+
+@app.route('/admin/entreprises')
+def admin_entreprises():
+    if 'user_id' not in session or session.get('user_role') != 'admin':
+        return redirect(url_for('index'))
+    
+    user = {
+        'id': session['user_id'],
+        'nom': session['user_nom'],
+        'role': session['user_role']
+    }
+    
+    entreprises = get_all_entreprises()
+    
+    # Ajouter le nombre de produits pour chaque entreprise
+    for entreprise in entreprises:
+        products = get_products_by_entreprise(entreprise['id'])
+        entreprise['nb_products'] = len(products)
+    
+    return render_template_string(
+        ADMIN_ENTREPRISES_TEMPLATE,
+        user=user,
+        entreprises=entreprises
+    )
+
+
+@app.route('/admin/entreprise/<int:entreprise_id>')
+def admin_view_entreprise(entreprise_id):
+    if 'user_id' not in session or session.get('user_role') != 'admin':
+        return redirect(url_for('index'))
+    
+    entreprise = get_entreprise_by_id(entreprise_id)
+    if not entreprise:
+        return "Entreprise introuvable", 404
+    
+    # Sauvegarder l'entreprise actuelle dans la session pour l'admin
+    session['admin_viewing_entreprise'] = entreprise_id
+    session['admin_viewing_entreprise_nom'] = entreprise['nom']
+    
+    user = {
+        'id': session['user_id'],
+        'nom': session['user_nom'],
+        'nom_entreprise': entreprise['nom'],
+        'id_entreprise': entreprise_id,
+        'role': 'admin'
+    }
+    
+    products = get_products_by_entreprise(entreprise_id)
+    total_quantity = sum(int(p['quantite']) for p in products) if products else 0
+    total_value = sum(float(p['prix']) * int(p['quantite']) for p in products) if products else 0
+    
+    return render_template_string(
+        DASHBOARD_TEMPLATE,
+        user=user,
+        products=products,
+        total_quantity=total_quantity,
+        total_value=total_value
+    )
 
 # ---------- Lancement Webview / dev ----------
 
