@@ -1,3 +1,5 @@
 id,nom,email,mdp,role,created_at,id_entreprise
 1,Lundi,lundi@gmail.com,$2b$14$MDVjmbEskVcVL93GIo4BjOPZSkdCmM48GEFFKRRexO5QXnNyQbf3O,user,2025-12-15 14:42:57,1
 2,Lundi2,lundi2@gmail.com,$2b$14$MOT2kEEng.V96EdxSFm24O8FI6SfdfpTm7ifBBrK5z5OHXNwaZ5Fe,user,2025-12-15 14:44:04,1
+3,Mike,mike@gmail.com,$2b$14$WDfzg9oGRVt0oCyU3RGAuun87qbIP2K9AI1I518QzEEfanz0YhFca,user,2025-12-18 12:55:07,2
+4,John,john@gmail.com,$2b$14$7L4ShXeVsfScQgqn49YcvudwedRlcLDgT9dWGVpum9/bfzGAzJLjq,admin,2025-12-18 12:57:17,2
