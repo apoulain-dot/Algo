@@ -4,6 +4,7 @@ Marketplace est une application web développée en Python permettant aux entrep
 Le projet intègre une approche DevSecOps afin de garantir la qualité, la sécurité et la fiabilité du code.
 
 🚀 Fonctionnalités
+
 🏢 Côté Entreprises
 
 Inscription et connexion sécurisées
