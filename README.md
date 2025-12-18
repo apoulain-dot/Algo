@@ -1,55 +1,93 @@
+🛒 Marketplace – Plateforme de Vente pour Entreprises
 
----
+Marketplace est une application web permettant aux entreprises de vendre leurs produits en ligne et aux clients de passer des commandes simplement et en toute sécurité.
+Le projet intègre une approche DevSecOps afin de garantir la qualité, la sécurité et la fiabilité du code.
 
-# Marketplace – Plateforme de Vente pour Entreprise
 
-Une application web en Python qui permet aux entreprises de vendre leurs produits en ligne et aux clients de passer des commandes.
+🏢 Côté Entreprises
 
-##  Fonctionnalités
+Inscription et connexion sécurisées
 
-### Entreprises
+Gestion complète des produits (ajout, modification, suppression)
 
-* Inscription / connexion sécurisée
-* Gestion des produits : ajout, modification, suppression
-* Gestion du stock
-* Tableau de bord et statistiques (graphiques)
-* Visualisation des commandes
+Suivi et gestion du stock
 
-### Clients
+Tableau de bord avec statistiques et graphiques
 
-* Consultation des produits
-* Recherche et filtres
-* Passage de commande simple
+Consultation et gestion des commandes clients
 
-##  Installation
+🔐 Sécurité
 
-### Prérequis
+La sécurité est au cœur du projet :
 
-* Python 3.8+
-* pip installé
+Mots de passe hachés avec SHA et Salt
 
-### Étapes
+Vérification des mots de passe via Have I Been Pwned
 
-1. Télécharger ou cloner le projet
-2. Installer les dépendances :
+Intégration d’outils DevSecOps :
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+SemGrep : analyse statique du code
 
-##  Lancer l’application
+Gitleaks : détection de secrets exposés
 
-### Mode Web (navigateur)
+Trivy : analyse de vulnérabilités
 
-```bash
+Pipelines automatisés via GitHub Actions
+
+🛠️ Technologies Utilisées
+
+Python 
+
+Flask (backend web)
+
+PyWebView (version desktop)
+
+GitHub Actions (CI/CD & sécurité)
+
+SemGrep, Gitleaks, Trivy
+
+📁 Structure du Projet
+.
+├── .github/workflows   # Pipelines DevSecOps (CI/CD)
+├── data                # Données & ressources
+├── app.py              # Application web principale
+├── desktop_app.py      # Version desktop (PyWebView)
+├── requirements.txt    # Dépendances Python
+└── README.md
+
+⚙️ Installation
+Prérequis
+
+Python 3.8 ou supérieur
+
+pip installé
+
+Étapes d’installation
+
+Cloner le dépôt :
+
+git clone https://github.com/GabGuardia-hub/GabGuardia-hub.git
+
+
+Accéder au dossier du projet :
+
+cd GabGuardia-hub
+
+
+Installer les dépendances :
+
+pip install -r requirements.txt
+
+▶️ Lancer l’Application
+🌐 Mode Web (Navigateur)
 python app.py
-```
 
-Ouvrir : `http://localhost:5000`
 
-### Mode Application Desktop
+Puis ouvrir :
 
-```bash
+http://localhost:5000
+
+🖥️ Mode Application Desktop
 python desktop_app.py
 ```
 
@@ -69,7 +107,7 @@ SQLite3 avec 3 tables :
 
 * `users` (entreprises)
 * `products`
-* `entreprises`
+* `orders`
 
 La base est créée automatiquement au premier lancement.
 
