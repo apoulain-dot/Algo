@@ -69,7 +69,7 @@ SQLite3 avec 3 tables :
 
 * `users` (entreprises)
 * `products`
-* `orders`
+* `entreprises`
 
 La base est créée automatiquement au premier lancement.
 
