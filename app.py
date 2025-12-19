@@ -2371,7 +2371,6 @@ ADMIN_ENTREPRISES_TEMPLATE = '''
                     <div class="entreprise-icon">{{ entreprise.nom[0]|upper }}</div>
                     <div class="entreprise-info">
                         <div class="entreprise-name">{{ entreprise.nom }}</div>
-                        <div class="entreprise-id">ID: {{ entreprise.id }}</div>
                     </div>
                 </div>
                 
