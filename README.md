@@ -144,7 +144,11 @@ La base est créée automatiquement au premier lancement.
 
 1. Parcourir les produits
 2. Rechercher / filtrer
-3. Passer une commande 
+3. Passer une commande
 
+### Admin
+
+1.Parcourir les tableaux de bord des entreprises
+2.Modifier les inventaires
 
 
