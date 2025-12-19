@@ -49,9 +49,8 @@ SemGrep, Gitleaks, Trivy
 📁 Structure du Projet
 .
 ├── .github/workflows   # Pipelines DevSecOps (CI/CD)
-├── data                # Données & ressources
+├── data                # Données & ressources CSV
 ├── app.py              # Application web principale
-├── desktop_app.py      # Version desktop (PyWebView)
 ├── requirements.txt    # Dépendances Python
 └── README.md
 
@@ -105,9 +104,9 @@ python desktop_app.py
 
 SQLite3 avec 3 tables :
 
-* `users` (entreprises)
+* `users`
 * `products`
-* `orders`
+* `entreprises`
 
 La base est créée automatiquement au premier lancement.
 
