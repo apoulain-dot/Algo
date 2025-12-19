@@ -986,13 +986,6 @@ DASHBOARD_TEMPLATE = '''
 </head>
 <body>
     <nav class="navbar">
-<<<<<<< HEAD
-    <div class="navbar-brand">
-        <div class="navbar-logo">
-            <svg viewBox="0 0 24 24">
-                <path d="M20 7h-4V4c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v3H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zM10 4h4v3h-4V4zm10 16H4V9h16v11z"/>
-            </svg>
-=======
         <div class="navbar-brand">
             <div class="navbar-logo">
                 <svg viewBox="0 0 24 24">
@@ -1003,6 +996,11 @@ DASHBOARD_TEMPLATE = '''
         </div>
         
         <div class="navbar-right">
+            {% if user.role == 'admin' %}
+            <a href="/admin/entreprises" class="nav-link" style="background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%); color: white; border: none;">
+                ← Retour aux entreprises
+            </a>
+            {% endif %}
             <div class="navbar-user">
                 <div class="navbar-user-info">
                     <div class="navbar-user-name">{{ user.nom }}</div>
@@ -1011,27 +1009,8 @@ DASHBOARD_TEMPLATE = '''
                 <div class="navbar-avatar">{{ user.nom[0]|upper }}</div>
             </div>
             <a href="/logout" class="logout-btn">Déconnexion</a>
->>>>>>> da3806ed3828d8d4c6f0b418f4a9914e8f3e1efd
         </div>
-        <span class="navbar-title">Gestion de Stock</span>
-    </div>
-    
-    <div class="navbar-right">
-        {% if user.role == 'admin' %}
-        <a href="/admin/entreprises" class="nav-link" style="background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%); color: white; border: none;">
-            ← Retour aux entreprises
-        </a>
-        {% endif %}
-        <div class="navbar-user">
-            <div class="navbar-user-info">
-                <div class="navbar-user-name">{{ user.nom }}</div>
-                <div class="navbar-user-company">{{ user.nom_entreprise }}</div>
-            </div>
-            <div class="navbar-avatar">{{ user.nom[0]|upper }}</div>
-        </div>
-        <a href="/logout" class="logout-btn">Déconnexion</a>
-    </div>
-</nav>
+    </nav>
     
     <div class="container">
         <div class="page-header">
