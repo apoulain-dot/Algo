@@ -50,7 +50,8 @@ def check_password(password: str, hashed: str) -> bool:
 
 def check_password_pwned(password):
     """Vérifie si un mot de passe a été compromis via l'API Pwned Passwords"""
-    sha1_password = hashlib.sha1(password.encode('utf-8')).hexdigest().upper()
+    # SHA1 utilisé uniquement pour k-anonymity (pas pour la sécurité)
+    sha1_password = hashlib.sha1(password.encode('utf-8'), usedforsecurity=False).hexdigest().upper()
     prefix = sha1_password[:5]
     suffix = sha1_password[5:]
     
@@ -2765,3 +2766,4 @@ if __name__ == '__main__':
     init_csv_files()
     app.run(debug=False)
     start_app()
+
