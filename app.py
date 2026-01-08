@@ -4,6 +4,8 @@ from datetime import datetime
 from flask import Flask, render_template_string, request, redirect, url_for, session
 import webview
 import bcrypt
+import hashlib
+import requests
 
 app = Flask(__name__)
 # Génère une clé aléatoire ou utilise une variable d'environnement
@@ -46,6 +48,26 @@ def hash_password(password: str) -> str:
 def check_password(password: str, hashed: str) -> bool:
     return bcrypt.checkpw(password.encode("utf-8"), hashed.encode("utf-8"))
 
+def check_password_pwned(password):
+    """Vérifie si un mot de passe a été compromis via l'API Pwned Passwords"""
+    sha1_password = hashlib.sha1(password.encode('utf-8')).hexdigest().upper()
+    prefix = sha1_password[:5]
+    suffix = sha1_password[5:]
+    
+    try:
+        url = f'https://api.pwnedpasswords.com/range/{prefix}'
+        response = requests.get(url, timeout=3)
+        
+        if response.status_code == 200:
+            hashes = (line.split(':') for line in response.text.splitlines())
+            for hash_suffix, count in hashes:
+                if hash_suffix == suffix:
+                    return True, int(count)
+            return False, 0
+    except:
+        return False, 0
+    
+    return False, 0
 
 def get_next_id(filename):
     if not os.path.exists(filename) or os.path.getsize(filename) == 0:
@@ -2488,6 +2510,14 @@ def register():
             login_error=None,
             success=None
         )
+    is_pwned, count = check_password_pwned(password)
+    if is_pwned:
+        return render_template_string(
+            AUTH_TEMPLATE,
+            register_error=f'Ce mot de passe a été compromis dans {count:,} fuites de données. Choisissez un mot de passe différent.',
+            login_error=None,
+            success=None
+        )
 
     create_user(nom, email, password, nom_entreprise)
     return render_template_string(
@@ -2496,7 +2526,6 @@ def register():
         login_error=None,
         register_error=None
     )
-
 
 @app.route('/logout')
 def logout():
